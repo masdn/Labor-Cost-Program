@@ -85,7 +85,9 @@ executable times-table
 
     -- Modules included in this executable, other than Main.
     other-modules:    GlossMain,
-                      BrickMain
+                      BrickMain,
+                      DBController,
+                      DBCredentials 
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -100,7 +102,9 @@ executable times-table
         vty,
         vty-crossplatform,
         containers,
-        postgresql-simple
+        postgresql-simple,
+        text
+        
 
 
     -- Directories containing source files.

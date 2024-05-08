@@ -31,7 +31,7 @@ data MyState = MyState
     , _widthNum :: String
     , _strBarType :: String
     , _canvasType :: String
-    , _framesPerSecond :: String
+    , _anotherVar :: String
     , _currentFocus :: WidgetName
     , _curInputNum :: Int
     } deriving (Eq, Show)
@@ -48,8 +48,7 @@ between them.
 -}
 data WidgetName =
     Height | Width |
-    StretcherBarType | CanvasType |
-    FramesPerSecond
+    StretcherBarType | CanvasType 
     deriving (Eq, Ord, Show)
 
 {-
@@ -63,7 +62,6 @@ nameToGetter =
     , (Width, _widthNum)
     , (StretcherBarType, _strBarType)
     , (CanvasType, _canvasType)
-    , (FramesPerSecond, _framesPerSecond)
     ]
 
 -- List of all the input widget names
@@ -92,7 +90,7 @@ drawControls = renderTable $ table
     [ [ str "tab"          , str "shift focus down one line" ]
     , [ str "shift-tab"    , str "shift focus up one line" ]
     , [ str "backspace"    , str "remove the last character from the currently focused line" ]
-    , [ str "enter"        , str "submit the current values to gloss"]
+    , [ str "enter"        , str "submit calculate labor cost"]
     , [ str "q"            , str "quit"]
     , [ str "digit or '.'" , str "place the digit or '.' on the end of the currently focused line"]
     , [ str "anything else", str "do nothing"]
@@ -139,7 +137,6 @@ handleChar name c s = case name of
     Width              -> s { _widthNum = _widthNum s ++ [c] }
     StretcherBarType   -> s { _strBarType = _strBarType s ++ [c] }
     CanvasType         -> s { _canvasType = _canvasType s ++ [c] }
-    FramesPerSecond    -> s { _framesPerSecond = _framesPerSecond s ++ [c] }
     _                  -> s
 
 removeLast :: [a] -> [a]
@@ -152,7 +149,6 @@ handleCharOld name c s = case name of
     Width              -> s { _widthNum = _widthNum s ++ [c] }
     StretcherBarType   -> s { _strBarType = _strBarType s ++ [c] }
     CanvasType         -> s { _canvasType = _canvasType s ++ [c] }
-    FramesPerSecond    -> s { _framesPerSecond = _framesPerSecond s ++ [c] }
     _                  -> s
 
 
@@ -168,7 +164,6 @@ handleBackspace name s = case name of
     Width              -> s { _widthNum = removeLast $ _widthNum s }
     StretcherBarType   -> s { _strBarType = removeLast $ _strBarType s }
     CanvasType         -> s { _canvasType = removeLast $ _canvasType s }
-    FramesPerSecond    -> s { _framesPerSecond = removeLast $ _framesPerSecond s }
     _                  -> s
 
 -- Increment the current input number wrapping around if necessary
@@ -191,7 +186,7 @@ stateToInput :: MyState -> (Int, Int, Int, Int, Int)
 stateToInput s = (sb, fps, hn, wn, ct)
     where
         sb  = fromString 1 (_strBarType s)
-        fps = fromString 15  (_framesPerSecond s)
+        fps = 0
         hn = fromString 60 (_heightNum s)
         wn = fromString 48 (_widthNum s)
         ct  = fromString 0 (_canvasType s)
@@ -265,7 +260,7 @@ handleEvent bevent = return ()
 theMap :: AttrMap
 theMap = attrMap V.defAttr
     [ (labelAttr, fg V.blue),
-      (inputAttr, fg V.black) ]
+      (inputAttr, fg V.white) ]
 
 app :: App MyState () WidgetName
 app = App

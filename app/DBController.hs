@@ -60,22 +60,37 @@ run t@(s ,xx, h, w, c) = do
     displayPoView dbConnection t 
     return ()
 
-data Inventory = Inventory
+data InventoryDesc = InventoryDesc
   { sku :: Text
   , description :: Text
   } deriving (Eq)
 
-instance Show Inventory where
-  show (Inventory _ description ) = unpack description
+instance Show InventoryDesc where
+  show (InventoryDesc _ description ) = unpack description
 
 -- Implement the FromRow instance to map the query result to the Inventory data type
-instance FromRow Inventory where
-  fromRow = Inventory <$> field <*> field
+instance FromRow InventoryDesc where
+  fromRow = InventoryDesc <$> field <*> field
 
-queryData :: Connection -> Int -> IO [Inventory]
+type Real = Double
+
+data InventoryPrice = InventoryPrice
+  { sku1 :: Text
+  , price :: Int
+  } deriving (Eq)
+
+instance Show InventoryPrice where
+  show (InventoryPrice _ price ) = show price
+
+
+-- Implement the FromRow instance to map the query result to the Inventory data type
+instance FromRow InventoryPrice where
+  fromRow = InventoryPrice <$> field <*> field
+
+queryData :: Connection -> Int -> IO [InventoryDesc]
 queryData connection s =  do
-  let sqlQuery = "SELECT sku,description FROM inventory WHERE sku = 'LD' AND size = (?)"
-  query connection sqlQuery (Only s) :: IO [Inventory]
+  let sqlQuery = "SELECT sku,description FROM inventory WHERE sku LIKE '%LD%' AND size = (?)"
+  query connection sqlQuery (Only s) :: IO [InventoryDesc]
  -- forM_ xs $ \(Inventory _ description) -> putStrLn (unpack description)
 {-
 -- Function to query data and return a string description
@@ -89,24 +104,46 @@ queryData1 connection s = do
     return formattedResults
 -}
 -- Function to return a description based on bar type
-getDesc :: Connection -> Int -> Int -> IO [Inventory]
+getDesc :: Connection -> Int -> Int -> IO [InventoryDesc]
 getDesc db size barType = case barType of
     1 -> queryData db size
     2 -> queryData db size
     3 -> queryData db size
     _ -> return []
 
+getPrice :: Connection -> Int -> Int -> IO [InventoryPrice]
+getPrice db size barType = case barType of
+    1 -> queryPrice db size
+    2 -> queryPrice db size
+    3 -> queryPrice db size
+    _ -> return []
+
+queryPrice :: Connection -> Int -> IO [InventoryPrice]
+queryPrice connection s =  do
+  let sqlQuery = "SELECT sku,price FROM inventory WHERE sku LIKE '%LD%' AND size = (?)"
+  query connection sqlQuery (Only s) :: IO [InventoryPrice]
+
 -- Function to return a table widget
 poView :: Connection -> (Int, Int, Int, Int, Int) -> IO (Widget ())
 poView db (sb, x, h, w, c) = do
-    desc <- getDesc db w sb
+    desc1 <- getDesc db w sb
+    desc2 <- getDesc db h sb
+    price1 <- (getPrice db w sb ) 
+    price2 <- (getPrice db h sb ) 
+    --length <- getLgenth db w sb
     let tableData = table
-            [ [ str "Item Qty"  , str "Length" ,   str "Description"  ]
-            , [ str (show 2)    , str (show w)     , str (show desc) ]
-            , [ str (show 2)    , str (show h)     , str "COL3" ]
-            , [ str "---"       , str "----"       , str "---"  ]
+            [ [ str "Item Qty"  , str "Length" ,   str "Description" , str "Price"]
+            , [ str (show 2)    , str (show w)     , str (show desc1), str (show price1)  ]
+            , [ str (show 2)    , str (show h)     , str (show desc2), str (show price2) ]
+            , [ str "---"       , str "----"       , str "---" , str "" ] 
+            , [ str "---"       , str "---"       , str "Labor Cost:", str (show $ calcLabor h w )]
             ]
     return $ renderTable tableData
+
+
+
+calcLabor :: Int -> Int -> Float
+calcLabor l w = fromIntegral (l + w) * 0.92
 
 -- Function to display the UI with the table widget
 displayPoView :: Connection -> (Int, Int, Int, Int, Int) -> IO ()

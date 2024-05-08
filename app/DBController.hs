@@ -1,5 +1,8 @@
 
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveAnyClass #-}
 module DBController where
 
 import Brick.Main (simpleMain)
@@ -11,29 +14,105 @@ import Control.Monad (void, forM_)
 import Data.Int (Int64)
 import Data.Text (Text, unpack)
 import Database.PostgreSQL.Simple
+import Database.PostgreSQL.Simple.FromRow
 import Database.PostgreSQL.Simple.SqlQQ (sql)
 import GHC.Generics (Generic)
 import qualified DBCredentials as CREDS
 
+--data aConnection = Connect Connection
+{-}
+data BasicProduct = BasicProduct {sku :: Text
+                                  , size :: Int
+                                  , price :: Int
+                                  , description :: Maybe Text}
+  deriving (Show, Generic)
+  deriving anyclass (ToRow, FromRow)
 
-
-poView :: (Int, Int, Int, Int, Int) -> Widget () 
-poView (sb, x, h, w, c) = renderTable $ table
-    [ [ str "Item Qty"      , str "Description" , str ""  ]
-    , [ str (show 2)    , str (show w)       , str "COL3" ]
-    , [ str (show 2)    , str (show h)       , str "COL3" ]
-    , [ str ""          , str ""             , str ""     ]
+poView :: Connection -> (Int, Int, Int, Int, Int) -> Widget () 
+poView db (sb, x, h, w, c) = renderTable $ table
+    [ [ str "Item Qty"  , str "Length" ,   str "Description"  ]
+    , [ str (show 2)    , str (show w)     , str ((getDesc db w sb)) ]
+    , [ str (show 2)    , str (show h)     , str "COL3" ]
+    , [ str "---"          , str "----"    , str "---"  ]
     ]
 
---getSku :: Int -> Int -> String
 
+getDesc :: Connection -> Int -> Int -> BasicProduct
+getDesc db size barType = 
+    case barType of
+      1 -> queryData db size
+      2 -> queryData db size
+      3 -> queryData db size
 
+queryData :: Connection -> Int -> IO String
+queryData connection s =  do
+  let sqlQuery = "SELECT id,description FROM inventory WHERE sku = 'LD' AND size = ?"
+  xs <- query connection sqlQuery (Only s)
+  let formattedResults = unlines $ map (\(id, description) ->
+            "ID: " ++ show id ++ ", SKU: " ++ unpack description) xs
+  return formattedResults
+    
+-}
 run :: (Int, Int, Int, Int, Int)  -> IO ()
 run t@(s ,xx, h, w, c) = do
-    connection <- getConnection
-    queryData connection h
-    simpleMain (poView t)
+    dbConnection <- getConnection
+    --queryData dbConnection h
+    displayPoView dbConnection t 
     return ()
+
+data Inventory = Inventory
+  { sku :: Text
+  , description :: Text
+  } deriving (Eq)
+
+instance Show Inventory where
+  show (Inventory _ description ) = unpack description
+
+-- Implement the FromRow instance to map the query result to the Inventory data type
+instance FromRow Inventory where
+  fromRow = Inventory <$> field <*> field
+
+queryData :: Connection -> Int -> IO [Inventory]
+queryData connection s =  do
+  let sqlQuery = "SELECT sku,description FROM inventory WHERE sku = 'LD' AND size = (?)"
+  query connection sqlQuery (Only s) :: IO [Inventory]
+ -- forM_ xs $ \(Inventory _ description) -> putStrLn (unpack description)
+{-
+-- Function to query data and return a string description
+queryData1 :: Connection -> Int -> IO String
+queryData1 connection s = do
+    let sqlQuery = "SELECT description FROM inventory WHERE sku = 'LD' AND size = ?"
+    xs <- query connection sqlQuery (Only s)
+    let formattedResults = case xs of
+            [(Just desc)] -> unpack desc
+            _ -> "Not Found"
+    return formattedResults
+-}
+-- Function to return a description based on bar type
+getDesc :: Connection -> Int -> Int -> IO [Inventory]
+getDesc db size barType = case barType of
+    1 -> queryData db size
+    2 -> queryData db size
+    3 -> queryData db size
+    _ -> return []
+
+-- Function to return a table widget
+poView :: Connection -> (Int, Int, Int, Int, Int) -> IO (Widget ())
+poView db (sb, x, h, w, c) = do
+    desc <- getDesc db w sb
+    let tableData = table
+            [ [ str "Item Qty"  , str "Length" ,   str "Description"  ]
+            , [ str (show 2)    , str (show w)     , str (show desc) ]
+            , [ str (show 2)    , str (show h)     , str "COL3" ]
+            , [ str "---"       , str "----"       , str "---"  ]
+            ]
+    return $ renderTable tableData
+
+-- Function to display the UI with the table widget
+displayPoView :: Connection -> (Int, Int, Int, Int, Int) -> IO ()
+displayPoView db canvas = do
+    widget <- poView db canvas
+    void $ simpleMain widget
 
 runThis :: (Int, Int, Int, Int, Int) -> IO ()
 runThis (s ,xx, h, w, c) = do
@@ -60,16 +139,6 @@ getConnection =
       , connectPassword = CREDS.password
       }
 
-type FromInventory = (Int64, Text, Maybe Text) 
-
-queryData :: Connection -> Int -> IO ()
-queryData connection s =  do
-  let sqlQuery = "SELECT id, sku FROM inventory WHERE sku = 'LD' AND size = ?"
-  xs <- query connection sqlQuery (Only s)
-  --print (xs :: [Only Int])
-  forM_ xs $ \(id,description) ->
-    putStrLn $ unpack description ++ " is " ++ show (id :: Int)
-  --putStrLn $ "Query 1: " <> show print
 
 queryLD :: Connection -> IO ()
 queryLD connection = do
@@ -79,10 +148,6 @@ queryLD connection = do
     putStrLn $ unpack description ++ " has ID: " ++ show (id :: Int)
   --putStrLn $ "Query 1: " <> show print 
 
-queryData1 :: Connection -> IO ()
-queryData1 connection = do
-    [Only i] <- query_ connection "select 2 + 2"
-    return i 
 
 printQueryRow :: (Int64, Text, Maybe Text) -> IO ()
 printQueryRow (id, sku, description) =

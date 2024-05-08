@@ -190,7 +190,7 @@ fromString def str = read str
 stateToInput :: MyState -> (Int, Int, Int, Int, Int)
 stateToInput s = (sb, fps, hn, wn, ct)
     where
-        sb  = fromString 2 (_strBarType s)
+        sb  = fromString 1 (_strBarType s)
         fps = fromString 15  (_framesPerSecond s)
         hn = fromString 60 (_heightNum s)
         wn = fromString 48 (_widthNum s)

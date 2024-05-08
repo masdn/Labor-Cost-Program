@@ -16,6 +16,7 @@ runThis = do
   putStrLn "\nRunning postgresql-simple"
   connection <- getConnection
   queryData connection
+  queryLD connection
   {- cleanUp connection
   insertStuff connection
   
@@ -45,7 +46,13 @@ queryData connection = do
     putStrLn $ unpack sku ++ " is " ++ show (id :: Int)
   --putStrLn $ "Query 1: " <> show print
 
- 
+queryLD :: Connection -> IO ()
+queryLD connection = do
+  xs <- query_ connection "select id,description from inventory where description like '%Light%'"
+  --print (xs :: [Only Int])
+  forM_ xs $ \(id,description) ->
+    putStrLn $ unpack description ++ " has ID: " ++ show (id :: Int)
+  --putStrLn $ "Query 1: " <> show print 
 
 queryData1 :: Connection -> IO ()
 queryData1 connection = do

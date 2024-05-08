@@ -5,4 +5,5 @@ import qualified DBController as DBC
 main :: IO ()
 --main = putStrLn "Hello, Haskell!"
 --main = BM.run
-main = do DBC.runThis
+main = --do DBC.runThis
+        BM.run

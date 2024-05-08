@@ -27,10 +27,10 @@ as a list of all the input widget names
 and which one is currently selected.
 -}
 data MyState = MyState
-    { _timesTableNum :: String
-    , _pointsAroundCircle :: String
-    , _windowSize :: String
-    , _stepSize :: String
+    { _heightNum :: String
+    , _widthNum :: String
+    , _strBarType :: String
+    , _canvasType :: String
     , _framesPerSecond :: String
     , _currentFocus :: WidgetName
     , _curInputNum :: Int
@@ -47,8 +47,8 @@ line in the UI in order to more easily switch
 between them.
 -}
 data WidgetName =
-    TimesTableNum | PointsAroundCircle |
-    WindowSize | StepSize |
+    Height | Width |
+    StretcherBarType | CanvasType |
     FramesPerSecond
     deriving (Eq, Ord, Show)
 
@@ -59,10 +59,10 @@ in MyState.
 -}
 nameToGetter :: [(WidgetName, MyState -> String)]
 nameToGetter = 
-    [ (TimesTableNum, _timesTableNum)
-    , (PointsAroundCircle, _pointsAroundCircle)
-    , (WindowSize, _windowSize)
-    , (StepSize, _stepSize)
+    [ (Height, _heightNum)
+    , (Width, _widthNum)
+    , (StretcherBarType, _strBarType)
+    , (CanvasType, _canvasType)
     , (FramesPerSecond, _framesPerSecond)
     ]
 
@@ -132,18 +132,30 @@ placeCursor s cls = case filter pred cls of
 Place the given char at the end of the input of the given
 widget names respective String.
 -}
+
 handleChar :: WidgetName -> Char -> MyState -> MyState
 handleChar name c s = case name of
-    TimesTableNum      -> s { _timesTableNum = _timesTableNum s ++ [c] }
-    PointsAroundCircle -> s { _pointsAroundCircle = _pointsAroundCircle s ++ [c] }
-    WindowSize         -> s { _windowSize = _windowSize s ++ [c] }
-    StepSize           -> s { _stepSize = _stepSize s ++ [c] }
+    Height             -> s { _heightNum = _heightNum s ++ [c] }
+    Width              -> s { _widthNum = _widthNum s ++ [c] }
+    StretcherBarType   -> s { _strBarType = _strBarType s ++ [c] }
+    CanvasType         -> s { _canvasType = _canvasType s ++ [c] }
     FramesPerSecond    -> s { _framesPerSecond = _framesPerSecond s ++ [c] }
     _                  -> s
 
 removeLast :: [a] -> [a]
 removeLast [] = []
 removeLast xs = init xs
+
+handleCharOld :: WidgetName -> Char -> MyState -> MyState
+handleCharOld name c s = case name of
+    Height             -> s { _heightNum = _heightNum s ++ [c] }
+    Width              -> s { _widthNum = _widthNum s ++ [c] }
+    StretcherBarType   -> s { _strBarType = _strBarType s ++ [c] }
+    CanvasType         -> s { _canvasType = _canvasType s ++ [c] }
+    FramesPerSecond    -> s { _framesPerSecond = _framesPerSecond s ++ [c] }
+    _                  -> s
+
+
 
 -- Can you see why we can't quite abstract this with nameToGetter?
 {-
@@ -152,10 +164,10 @@ String.
 -}
 handleBackspace :: WidgetName -> MyState -> MyState
 handleBackspace name s = case name of
-    TimesTableNum      -> s { _timesTableNum = removeLast $ _timesTableNum s }
-    PointsAroundCircle -> s { _pointsAroundCircle = removeLast $ _pointsAroundCircle s }
-    WindowSize         -> s { _windowSize = removeLast $ _windowSize s }
-    StepSize           -> s { _stepSize = removeLast $ _stepSize s }
+    Height             -> s { _heightNum = removeLast $ _heightNum s }
+    Width              -> s { _widthNum = removeLast $ _widthNum s }
+    StretcherBarType   -> s { _strBarType = removeLast $ _strBarType s }
+    CanvasType         -> s { _canvasType = removeLast $ _canvasType s }
     FramesPerSecond    -> s { _framesPerSecond = removeLast $ _framesPerSecond s }
     _                  -> s
 
@@ -178,11 +190,11 @@ fromString def str = read str
 stateToInput :: MyState -> (Int, Int, Float, Int, Float)
 stateToInput s = (ws, fps, ttn, poc, ss)
     where
-        ws  = fromString 600 (_windowSize s)
+        ws  = fromString 600 (_strBarType s)
         fps = fromString 15  (_framesPerSecond s)
-        ttn = fromString 2.0 (_timesTableNum s)
-        poc = fromString 360 (_pointsAroundCircle s)
-        ss  = fromString 0.1 (_stepSize s)
+        ttn = fromString 2.0 (_heightNum s)
+        poc = fromString 360 (_widthNum s)
+        ss  = fromString 0.1 (_canvasType s)
 
 getTabOffSet :: Key -> Int
 getTabOffSet KBackTab = -1

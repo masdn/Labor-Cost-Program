@@ -17,7 +17,7 @@ import Data.Char (isDigit)
 import Data.Maybe (fromJust)
 
 import qualified GlossMain as GM
-
+import qualified DBController as DBC
 import qualified Debug.Trace as DT
 
 {-
@@ -187,14 +187,14 @@ fromString def str = read str
 
 -- Produce the input to gloss from our state,
 -- with defaults
-stateToInput :: MyState -> (Int, Int, Float, Int, Float)
+stateToInput :: MyState -> (Int, Int, Int, Int, Int)
 stateToInput s = (sb, fps, hn, wn, ct)
     where
         sb  = fromString 2 (_strBarType s)
         fps = fromString 15  (_framesPerSecond s)
-        hn = fromString 60.0 (_heightNum s)
+        hn = fromString 60 (_heightNum s)
         wn = fromString 48 (_widthNum s)
-        ct  = fromString 0.0 (_canvasType s)
+        ct  = fromString 0 (_canvasType s)
 
 getTabOffSet :: Key -> Int
 getTabOffSet KBackTab = -1
@@ -227,7 +227,7 @@ handleEvent bevent@(VtyEvent (EvKey key mods)) = do
         KChar '\t' -> put $ shiftFocus key s
         KBackTab   -> put $ shiftFocus key s
         KBS        -> put (handleBackspace (_currentFocus s) s)
-        KEnter     -> suspendAndResume' (GM.run $ stateToInput s)
+        KEnter     -> suspendAndResume' (DBC.run $ stateToInput s) --suspendAndResume' (GM.run $ stateToInput s)
         KChar 'q'  -> resizeOrQuit bevent
         KChar c    ->
             if isDigit c || c == '.'

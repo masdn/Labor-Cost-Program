@@ -188,13 +188,13 @@ fromString def str = read str
 -- Produce the input to gloss from our state,
 -- with defaults
 stateToInput :: MyState -> (Int, Int, Float, Int, Float)
-stateToInput s = (ws, fps, ttn, poc, ss)
+stateToInput s = (sb, fps, hn, wn, ct)
     where
-        ws  = fromString 600 (_strBarType s)
+        sb  = fromString 2 (_strBarType s)
         fps = fromString 15  (_framesPerSecond s)
-        ttn = fromString 2.0 (_heightNum s)
-        poc = fromString 360 (_widthNum s)
-        ss  = fromString 0.1 (_canvasType s)
+        hn = fromString 60.0 (_heightNum s)
+        wn = fromString 48 (_widthNum s)
+        ct  = fromString 0.0 (_canvasType s)
 
 getTabOffSet :: Key -> Int
 getTabOffSet KBackTab = -1

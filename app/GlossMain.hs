@@ -67,5 +67,7 @@ updateModel stepSize (colors, ttn, mp) = (tail colors, ttn + stepSize, mp)
 -- Put it all together with values given from Brick.
 run :: (Int, Int, Float, Int, Float) -> IO ()
 run (ws, fps, ttn, poc, ss) = do
-    let window = InWindow "Times Table Visualization" (ws, ws) (0, 0)
-    simulate window black fps (initialModel ttn poc (fromIntegral ws / 2)) drawLines (\vp frame -> updateModel ss)
+    picture <- loadBMP "map.bmp"
+    display (InWindow "Artisan Santa Fe" (600,600) (10,10)) white picture
+    --let window = InWindow "Times Table Visualization" (ws, ws) (0, 0)
+    --simulate window black fps (initialModel ttn poc (fromIntegral ws / 2)) drawLines (\vp frame -> updateModel ss)
